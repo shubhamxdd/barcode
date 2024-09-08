@@ -2,12 +2,11 @@ const User = require("../Models/User");
 const bcrypt = require("bcrypt");
 
 const crypto = require("crypto");
-
+const { generateToken } = require("../middleware/auth");
 
 const generateRandomPassword = () => {
-    return crypto.randomBytes(20).toString('hex').slice(0, 20);
-  };
-  
+  return crypto.randomBytes(20).toString("hex").slice(0, 20);
+};
 
 // Check if the user exists
 const check_user = async (name) => {
@@ -43,7 +42,7 @@ const check_password = async (name, password) => {
 const create_user = async (name, password, role) => {
   try {
     const existingUser = await User.findOne({ name });
-    console.log(existingUser)
+    console.log(existingUser);
     if (existingUser) {
       return { success: false, message: "User already exists" };
     }
@@ -59,13 +58,13 @@ const create_user = async (name, password, role) => {
     const newUser = new User({
       name,
       password: hashedPassword,
-      role
+      role,
     });
 
     await newUser.save();
     return { success: true, user: newUser };
   } catch (error) {
-    console.log(error.message)
+    console.log(error.message);
     return { success: false, error };
   }
 };
@@ -86,14 +85,21 @@ const delete_user = async (name) => {
 // Login function
 const login = async (name, password) => {
   const result = await check_password(name, password);
+  const user = await check_user(name);
+  console.log(user);
   if (result.success) {
-    return { success: true, message: "Login successful" };
+    const token = generateToken(user.user);
+    console.log(token);
+    return { success: true, message: "Login successful", token };
   } else {
     return { success: false, message: result.message };
   }
 };
 
-
-module.exports={
-    check_user,check_password,create_user,delete_user,login
-}
+module.exports = {
+  check_user,
+  check_password,
+  create_user,
+  delete_user,
+  login,
+};
